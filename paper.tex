@@ -1,0 +1,272 @@
+\documentclass[twoside]{article}
+
+
+% ------
+% Fonts and typesetting settings
+\usepackage[sc]{mathpazo}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\linespread{1.05} % Palatino needs more space between lines
+\usepackage{microtype}
+
+
+% ------
+% Page layout
+\usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt]{geometry}
+\usepackage[font=it]{caption}
+\usepackage{paralist}
+\usepackage{multicol}
+
+% ------
+% Lettrines
+\usepackage{lettrine}
+
+
+% ------
+% Abstract
+\usepackage{abstract}
+	\renewcommand{\abstractnamefont}{\normalfont\bfseries}
+	\renewcommand{\abstracttextfont}{\normalfont\small\itshape}
+
+
+% ------
+% Titling (section/subsection)
+\usepackage{titlesec}
+\renewcommand\thesection{\Roman{section}}
+\titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{}
+
+
+% ------
+% Header/footer
+\usepackage{fancyhdr}
+	\pagestyle{fancy}
+	\fancyhead{}
+	\fancyfoot{}
+	\fancyhead[C]{Journal paper template $\bullet$ January 2014 $\bullet$ Vol 1}
+	\fancyfoot[RO,LE]{\thepage}
+
+
+% ------
+% Clickable URLs (optional)
+\usepackage{hyperref}
+
+
+% ------
+% BibTex for bibliography
+\usepackage[numbers]{natbib}
+%\usepackage[square,sort&compress,authoryear]{natbib}
+
+% ------
+% Math
+\usepackage{amsthm}
+\usepackage{amsmath, mathtools}
+\usepackage{fixltx2e}
+\newtheorem{mydef}{Definition}
+% \setlength{\parskip}{0cm plus4mm minus3mm}
+
+% ------
+% Maketitle metadata
+\title{\vspace{-15mm}%
+	\fontsize{24pt}{10pt}\selectfont
+	\textbf{Symmetric NAT traversal algorithm toolbox}
+	}	
+\author{%
+	\large
+	\textsc{Du\v{s}an Klinec} \\[2mm]%\thanks{Template by \href{http://www.howtotex.com}{howtoTeX.com}} \\[2mm]
+	\normalsize	Faculty of Informatics \\
+	\normalsize	Masaryk University, Brno \\
+	\normalsize	\href{mailto:xklinec@mail.muni.cz}{xklinec@mail.muni.cz}
+	\and
+	\textsc{Vashek Matyáš} \\[2mm]%\thanks{Template by \href{http://www.howtotex.com}{howtoTeX.com}} \\[2mm]
+	\normalsize	Faculty of Informatics \\
+	\normalsize	Masaryk University, Brno \\
+	\normalsize	\href{mailto:matyas@mail.muni.cz}{matyas@mail.muni.cz}
+	\vspace{-5mm}
+	}
+\date{}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\maketitle
+\thispagestyle{fancy}
+
+\begin{abstract}
+\noindent Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur magna lorem, tempor sed facilisis vel, porta et turpis. Sed et felis a massa dictum posuere. Aliquam hendrerit rhoncus ipsum sit amet placerat. Duis fringilla est eu arcu mollis faucibus non sit amet eros. Vestibulum risus nibh, dapibus vitae laoreet eget, fringilla quis nisl. Proin consequat nibh sit amet mauris suscipit tincidunt. Sed rutrum, purus nec aliquam faucibus, quam libero venenatis nisi, ut tempor mi sapien vel diam. Pellentesque sagittis elit non risus malesuada accumsan. Morbi consequat urna et lacus hendrerit sodales. Proin at urna neque, ut dapibus urna. Curabitur venenatis molestie convallis. Vestibulum blandit vulputate risus, quis sodales sapien porttitor non.
+\end{abstract}
+	
+
+\begin{multicols}{2}
+% \lettrine[nindent=0em,lines=3]{L}orem ipsum dolor sit amet. 
+
+\section{Introduction}
+Network Addres Translators (abbreviated as NAT) has been increasing in popularity in recent years 
+mainly due to IPv4 address space depletion, in order to slow it down. On one side NAT offers
+the ability to share a public, globaly routable IP address among many internal network hosts but on 
+the other side it often breaks basic end-to-end principle of the Internet and thus favors server-client 
+communication model for clients connected behind NAT.
+
+In many applications is peer-to-peer (P2P) connection of crucial importance and the quality of service depends on 
+its quality heavily. Main motivation for this work is Voice-over-IP (VoIP) where direct connection 
+between communicating parties is necessary. If P2P connection is not possible to establish relay 
+servers has to be used (TURN~\citep{rfc5766} protocol is used). The presence 
+of another node in communication path can have negative effects on communication channel quality 
+(increased latency, jitter, lower bandwidth), relay server is a potential point of failure, 
+has to scale with increasing demands of the network, interesting point for attack, etc.
+Thus relay servers require non-negligible resources what makes them expensive for VoIP providers and
+establishing direct connection between parties is of high importance.
+
+In this paper we are focused on a symmetric NAT with predictable port allocation function. We propose a 
+new algorithm for establishing direct connection between hosts behind such NATs that is effective and 
+has low requirements.
+
+\section{Network Address Translation}
+
+
+Hola hop, hola hop, he-ja he-ja hej rup. Hola hop, hola hop, he-ja he-ja hej rup.
+\begin{compactitem}
+\item STUN~\citep{rfc5389}
+\item TURN~\citep{rfc5766}
+\item Teredo~\citep{rfc4380}
+\item uPNP~\citep{rfc6970}
+\item PCP~\citep{rfc6887}
+\item ICE~\citep{rfc5245}
+\end{compactitem}
+
+
+Properties of NAT assumed in our work:
+\begin{compactitem}
+\item symmetric
+\item port-restricted firewall
+\item port-sensitive allocation
+\item incremental port allocation rule
+\end{compactitem}
+
+\section{Related work}
+\begin{compactitem}
+\item chineese\citep{Wang:2006:RSN:1156422.1156550}
+\item uPNP
+\item PCP~\citep{rfc6887}
+\end{compactitem}
+
+\section{Theoretical network model}
+In order to evaluate algorithms in multiple environments with different parameters (workload, number of clients, etc.)
+we decided to model network behavior with stochastic process. In particular we choose a Poisson process, $\{N(t), t\geq0\}$ 
+that is used in queueing theory to model arrivals of requests to the server queue~\citep{Nelson:1995:PSP:207382}. 
+
+The core idea of NAT traversal is to predict the next allocated external port by NAT, thus from this perspective 
+it is important to model how NAT's internal state changes over time, i.e. how many external ports 
+were allocated between two time intervals. Thus the workload is important parameter for predicting allocated port.
+
+We model internal network connected to NAT w.r.t. newly created connections (new port allocation) as a 
+time homogenous Poisson process $Po(\lambda)$. By setting $\lambda$ we can model 
+different workload of the network and evaluate algorithms with respect to the various parameters e.g., 
+probability of an establishing connection. 
+
+% Random variable $X_t \sim Po(\lambda t)$ says how many
+% port allocations were made in time interval $[0,t]$
+
+\begin{mydef}
+$N(t)$ is a random variable of a number of a new port allocations made in time 
+interval~$[0,t]$ where $N(t) \sim Po(\lambda t)$. \\ 
+                                                      
+\begin{center}                                                     
+Then $P[N(t)=n] = \frac{(\lambda t)^n}{n!} e^{-\lambda t}$
+\end{center}
+\end{mydef}
+
+\section{UDP hole punching}
+All algorithms here make use of the same principle, UDP hole punching. NAT separates internal
+IP address space from the outer world, thus internet hosts cannot send packet to the 
+internal host directly. Communication has to be initiated from the inside\footnote{Ignoring 
+pre-set port forwarding, DMZ, uPnP, etc\dots}. 
+
+
+ By default a packet 
+comming from the internet (\textit{IP\textsubscript{A},Port\textsubscript{A}}) to the internal 
+network is dropped on the NAT unless there is a valid mapping in NAT allocation table.
+
+\section{Generic algorithm structure}
+Algorithms we propose have a common structure. In order to maximize probability of an establishing
+a connection (i.e., success rate) it proceeds in discrete \emph{steps}. In each step it 
+tries to open a new hole on it's NAT and/or to predict corresponding port allocated on the destination
+NAT.
+
+\begin{mydef}
+Symmetric NAT traversal algorithm is a mapping 
+$\mathcal{A}: \mathcal{U} \times \mathcal{S} \rightarrow \mathcal{P}_{src} \times \mathcal{P}_{dst}$, 
+where \\
+\begin{compactitem}
+\item $\mathcal{U}=\{0,1\}$ is set of communicating parties
+\item $\mathcal{S} = \{0, 1, \dots, n-1\}, \; n \in \mathbb{N}$
+is a step of the algorithm
+\item $\mathcal{P}_{src} \subseteq \mathbb{N}$ and $\mathcal{P}_{dst} \subseteq \mathbb{N}$
+are sets of source and destination ports respectively
+\end{compactitem}
+\end{mydef}
+
+\paragraph{Intuition.} 
+If we have $A(0,1) = (2,3)$ it means party $0$ in step $1$ sent packet from source port $2$ to destination port $3$
+of the party $1$.
+
+\paragraph{Time.} 
+The algorithm proceeds in discrete time steps. Algorith starts in time $t_0 = 0$~ms and each step $i \in \mathcal{S}$
+happens in time $t_i = iT$ for some $T$. If it is not mentioned otherwise, $T = 10$~ms.
+
+\paragraph{Party change.} 
+We define unary operation on communicating parties. 
+\[
+a \in \mathcal{U},  \neg a = \begin{dcases*}
+         0 & when $a=1$\\
+         1 & when $a=0$
+        \end{dcases*}
+\]
+
+\subsection{Algorithm I - baby-step, giant-step}
+We propose the algorithm with high success rate for small network loads, i.e.,
+$\lambda \leq 0.03, T=10$~ms. When error becomes larger,
+algorithm step is not fast enought to compensate errors and thus fails for larger $\lambda$.
+
+\begin{mydef}
+Baby-step giant-step algorithm
+\[
+u \in \mathcal{U}, s \in \mathcal{S}: 
+\mathcal{A}(u, s) = \begin{dcases*}
+         (0, s)  & when $u=0$\\
+         (0, 2s) & when $u=1$
+        \end{dcases*}
+\]
+\end{mydef}
+
+Intuitively the source port is kept constant, one side of the protocol scans ports sequentially, another
+side of the protocol scans ports with step 2.
+
+\subsection{Algorithm II - fixed destination port}
+Algorithm with fixed destination port described in by \citep{Wang:2006:RSN:1156422.1156550}
+changes the source port in order to create new holes in NAT in each step.
+
+\begin{mydef}
+Fixed destination port algorithm
+\[
+u \in \mathcal{U}, s \in \mathcal{S}: \;
+\mathcal{A}(u, s) = (s, \Delta_u)
+\] for some constants $\Delta_0, \Delta_1$ based on the current network workload determined in initial phase
+of the protocol.
+\end{mydef}
+
+Intuitively the source port is kept constant, one side of the protocol scans ports sequentially, another
+side of the protocol scans ports with step 2.
+
+
+% -----
+% Bibliography
+\bibliographystyle{unsrtnat}
+\bibliography{paper}
+
+\end{multicols}
+
+
+
+\end{document}
