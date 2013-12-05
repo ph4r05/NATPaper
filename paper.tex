@@ -102,7 +102,7 @@
 % \lettrine[nindent=0em,lines=3]{L}orem ipsum dolor sit amet. 
 
 \section{Introduction}
-Network Addres Translators (abbreviated as NAT) has been increasing in popularity in recent years 
+Network Address Translators (abbreviated as NAT) has been increasing in popularity in recent years 
 mainly due to IPv4 address space depletion, in order to slow it down. On one side NAT offers
 the ability to share a public, globaly routable IP address among many internal network hosts but on 
 the other side it often breaks basic end-to-end principle of the Internet and thus favors server-client 
@@ -123,33 +123,156 @@ new algorithm for establishing direct connection between hosts behind such NATs 
 has low requirements.
 
 \section{Network Address Translation}
+Common NAT categorization is according to~\citep{rfc3489}: a) Full Cone
+b) IP Restricted Cone, c) Port Restricted Cone, d) Symmetric.
+
+NAT connects two networks, denoted internal and external in further text. We assume NAT has only 
+one external address for simplicity. 
+
+\paragraph{Definitions.}
+Symmetric NAT could be defined as follows.
+
+\begin{mydef}
+\begin{align*}
+\mathbb{SC} = \mathbb{IP} \times \mathbb{PORT}
+\end{align*} is a Socket. $\mathbb{IP}$ is set of all possible IP addresses and $\mathbb{PORT}$ 
+is set of all possible ports, basically $\mathbb{PORT} = \{1,2,\dots,65535\}$.
+\begin{align*}
+\mathbb{SP} = \mathbb{IP} \times \mathbb{PORT} \times \mathbb{IP} \times \mathbb{PORT}
+\end{align*} is a Socket Pair.
+\end{mydef}
+
+\begin{mydef}
+\begin{align*}
+\mathbb{AT} \subseteq \mathbb{SP} \times \mathbb{PORT}
+\end{align*} is an allocation table of the NAT. Second component is external port allocated for particular socket pair.
+\end{mydef}
+Allocation table is a set of all socket pairs and corresponding allocated external port.
+
+% \paragraph{Filtering rule.} Let assume packet with socket pair {(IP\textsubscript{out},PORT\textsubscript{out},IP\textsubscript{ex},PORT\textsubscript{ex})} 
+% received on NAT external interface (we'll use this notation in further text). Packet is allowed to pass to internal network iff 
+% \begin{align*}
+% &  \exists \; \text{IP\textsubscript{in}} \in \mathbb{IP}, \; \text{PORT\textsubscript{in}} \in \mathbb{PORT}:\\
+% & ((\text{IP\textsubscript{in}}, \text{PORT\textsubscript{in}}, \text{IP\textsubscript{out}}, \text{PORT\textsubscript{out}}), \text{PORT\textsubscript{ex}} ) \in \mathbb{AT}
+% \end{align*}
+% 
+% If packet is allowed to pass, it is then forwarded to host {(IP\textsubscript{in}, PORT\textsubscript{in})}. A new record 
+% to the allocation table is added when internal host sends packet to the external host. 
+% 
+% \paragraph{Allocation rule.} ToDo
+
+\subsection{NAT classes}
+
+\paragraph{Full cone NAT.} ~\\
+Allocation table $\mathbb{AT} \subseteq \mathbb{SC} \times \mathbb{PORT}$ holds association between internal 
+hosts socket and mapped external NAT port. 
+% Rule is created once the connection from the internal host is initiated to an arbitrary external address.
+Filtering rule is
+\begin{align*}
+& PASS((\text{IP\textsubscript{out}}, \text{PORT\textsubscript{out}}, \text{IP\textsubscript{ex}}, \text{PORT\textsubscript{ex}} )) \Leftrightarrow \\
+&  \exists \; \text{IP\textsubscript{in}} \in \mathbb{IP}, \; \text{PORT\textsubscript{in}} \in \mathbb{PORT}:\\
+& ((\text{IP\textsubscript{in}}, \text{PORT\textsubscript{in}}), \text{PORT\textsubscript{ex}} ) \in \mathbb{AT}
+\end{align*}
+ 
+\paragraph{Address restricted cone NAT.} ~\\
+Allocation table $\mathbb{AT} \subseteq \{\mathbb{IP} \times \mathbb{PORT} \times \mathbb{IP}\} \times \mathbb{PORT}$ 
+holds association between internal hosts socket, external host IP address and mapped external NAT port. 
+% Rule is created once the connection from the internal host is initiated to an arbitrary external address.
+Filtering rule is
+\begin{align*}
+& PASS((\text{IP\textsubscript{out}}, \text{PORT\textsubscript{out}}, \text{IP\textsubscript{ex}}, \text{PORT\textsubscript{ex}} )) \Leftrightarrow \\
+&  \exists \; \text{IP\textsubscript{in}} \in \mathbb{IP}, \; \text{PORT\textsubscript{in}} \in \mathbb{PORT}:\\
+& ((\text{IP\textsubscript{in}}, \text{PORT\textsubscript{in}}, \text{IP\textsubscript{out}}), \text{PORT\textsubscript{ex}} ) \in \mathbb{AT}
+\end{align*}
+
+\paragraph{Port restricted cone NAT.} ~\\
+Allocation table $\mathbb{AT} \subseteq \{\mathbb{IP} \times \mathbb{PORT} \times \mathbb{IP} \times \mathbb{PORT}\} \times \mathbb{PORT}$ 
+holds association between internal hosts socket, external host socket and mapped external NAT port. 
+% Rule is created once the connection from the internal host is initiated to an arbitrary external address.
+Filtering rule is
+\begin{align*}
+& PASS((\text{IP\textsubscript{out}}, \text{PORT\textsubscript{out}}, \text{IP\textsubscript{ex}}, \text{PORT\textsubscript{ex}} )) \Leftrightarrow \\
+&  \exists \; \text{IP\textsubscript{in}} \in \mathbb{IP}, \; \text{PORT\textsubscript{in}} \in \mathbb{PORT}:\\
+& ((\text{IP\textsubscript{in}}, \text{PORT\textsubscript{in}}, \text{IP\textsubscript{out}}, \text{PORT\textsubscript{out}}), \text{PORT\textsubscript{ex}} ) \in \mathbb{AT}
+\end{align*}
+
+\paragraph{Symmetric NAT.} ~\\
+Allocation table $\mathbb{AT}$ and filtering rule is the same as in Port restricted cone NAT. The difference lies in the way 
+the new entries in allocation table are created. For Cone NAT holds that multiple entries in the allocation table 
+can have the same external port assigned, while Symmetric NAT creates new allocation entry for each new connection. 
+More formally the restriction for $\mathbb{AT}$: 
+\begin{align*}
+& \exists s \in \mathbb{SP}, p \in \mathbb{PORT}: (s, p) \in \mathbb{AT} \Rightarrow (\forall s^{\prime} \in \mathbb{SP} \\
+& s^{\prime} \neq s , p^{\prime} \in \mathbb{PORT}: ((s^{\prime}, p^{\prime}) \in \mathbb{AT}): p \neq p^{\prime})
+\end{align*}
+% 
+%     PASS((\text{IP\textsubscript{out}}, \text{PORT\textsubscript{out}}, \text{IP\textsubscript{ex}}, \text{PORT\textsubscript{ex}} )) \Leftrightarrow \\
+% &  \exists \; \text{IP\textsubscript{in}} \in \mathbb{IP}, \; \text{PORT\textsubscript{in}} \in \mathbb{PORT}:\\
+% & ((\text{IP\textsubscript{in}}, \text{PORT\textsubscript{in}}, \text{IP\textsubscript{out}}, \text{PORT\textsubscript{out}}), \text{PORT\textsubscript{ex}} ) \in \mathbb{AT}
+% \end{align*}
 
 
-Hola hop, hola hop, he-ja he-ja hej rup. Hola hop, hola hop, he-ja he-ja hej rup.
-\begin{compactitem}
-\item STUN~\citep{rfc5389}
-\item TURN~\citep{rfc5766}
-\item Teredo~\citep{rfc4380}
-\item uPNP~\citep{rfc6970}
-\item PCP~\citep{rfc6887}
-\item ICE~\citep{rfc5245}
-\end{compactitem}
+% 
+%We mainly categorize NATs from two perspectives a) 
+% 
+% Hola hop, hola hop, he-ja he-ja hej rup. Hola hop, hola hop, he-ja he-ja hej rup.
+% \begin{compactitem}
+% \item STUN~\citep{rfc5389}
+% \item TURN~\citep{rfc5766}
+% \item Teredo~\citep{rfc4380}
+% \item uPNP~\citep{rfc6970}
+% \item PCP~\citep{rfc6887}
+% \item ICE~\citep{rfc5245}
+% \end{compactitem}
+% 
 
+% Properties of NAT assumed in our work:
+% \begin{compactitem}
+% \item symmetric
+% \item port-restricted firewall
+% \item port-sensitive allocation
+% \item incremental port allocation rule
+% \end{compactitem}
 
-Properties of NAT assumed in our work:
-\begin{compactitem}
-\item symmetric
-\item port-restricted firewall
-\item port-sensitive allocation
-\item incremental port allocation rule
-\end{compactitem}
+\section{Existing techniques}
+Many different solutions for traversing NATs exist e.g., NAT traversal in Internet Key Exchange~\citep{rfc3947} or Terredo tunneling~\citep{rfc4380}.
+
+Some devices with NAT functionality provide special interface enabling traversal, for example NAT Port Mapping Protocol~\citep{rfc6886}. But in general 
+it is not widely deployed and it cannot be relied upon. 
+
+Most of the applications nowadays use Interactive Connectivity Establishment~(ICE)~\citep{rfc5245} what is a very powerful toolbox for traversing 
+various types of NAT, but does not work with symmetric NATs. ICE mainly uses STUN and TURN.
 
 \section{Related work}
+Some interesting algorithms for traversing symmetric NAT were proposed by Y. Takeda in \citep{takeda}, but the case both clients are behind symmetric NAT
+with port sensitive allocation function is not covered. It mentions that sending more packets won't increase probability of establishing the new connection.
+Our motivation is to show that it is actually possible.
+
+The \citep{rfc5128} maps current state of the art in NAT traversal. But does not cover our case.
+
+Also the academic research was done in this field, for example by Wei~\emph{et.~al.} in \citep{wei}., but their algorithm is using another technique compared
+to our approach. The downside of their algorithm is it requires Time To Live~(TTL) modification of the IP~packet. This is in majority of cases considered
+as a privileged operation in operating system and sufficient privileges are required for this change. 
+
+\section{Related work II}
 \begin{compactitem}
 \item chineese\citep{Wang:2006:RSN:1156422.1156550}
 \item uPNP
 \item PCP~\citep{rfc6887}
 \end{compactitem}
+
+\section{UDP hole punching with STUN}
+All algorithms here make use of the same principle, UDP hole punching. NAT separates internal
+IP address space from the outer world, thus internet hosts cannot send packet to the 
+internal host directly. Communication has to be initiated from the inside\footnote{Ignoring 
+pre-set port forwarding, DMZ, uPnP, etc\dots}, what is problematic if two nodes behind 
+NAT wants to communicate. 
+
+
+
+By default a packet 
+coming from the internet (\textit{IP\textsubscript{A},Port\textsubscript{A}}) to the internal 
+network is dropped on the NAT unless there is a valid mapping in NAT allocation table.
 
 \section{Theoretical network model}
 In order to evaluate algorithms in multiple environments with different parameters (workload, number of clients, etc.)
@@ -177,17 +300,6 @@ Then $P[N(t)=n] = \frac{(\lambda t)^n}{n!} e^{-\lambda t}$
 \end{center}
 \end{mydef}
 
-\section{UDP hole punching}
-All algorithms here make use of the same principle, UDP hole punching. NAT separates internal
-IP address space from the outer world, thus internet hosts cannot send packet to the 
-internal host directly. Communication has to be initiated from the inside\footnote{Ignoring 
-pre-set port forwarding, DMZ, uPnP, etc\dots}. 
-
-
- By default a packet 
-coming from the internet (\textit{IP\textsubscript{A},Port\textsubscript{A}}) to the internal 
-network is dropped on the NAT unless there is a valid mapping in NAT allocation table.
-
 \section{Generic algorithm structure}
 Algorithms we propose have a common structure. In order to maximize probability of an establishing
 a connection (i.e., success rate) it proceeds in discrete \emph{steps}. In each step it 
@@ -201,12 +313,14 @@ where \\
 \begin{compactitem}
 \item $\mathcal{U}=\{0,1\}$ is set of communicating parties
 \item $\mathcal{S} = \{0, 1, \dots, n-1\}, \; n \in \mathbb{N}$ is a step of the algorithm
-\item $\mathcal{M}$ contains vectors of parameters of the environment (i.e., network model 
-parameters and additional information obtained in initial phase)
+\item $\mathcal{M}$ is set of vectors of parameters of the environment (i.e., network model 
+parameters and additional information obtained in initial phase). 
+In our setting $\mathcal{M} = \{ (\lambda) | \lambda > 0 \}$. For simplicity $\mathcal{M} = \{ \lambda | \lambda > 0 \}$.
 \item $\mathcal{P}_{src} \subseteq \mathbb{N}$ and $\mathcal{P}_{dst} \subseteq \mathbb{N}$
 are sets of source and destination ports respectively
 \end{compactitem}
 \end{mydef}
+If third parameter is not important for the algorithm it can be ignored in notation.
 
 \paragraph{Intuition.} 
 If we have $A(0,1) = (2,3)$ it means party $0$ in step $1$ sent packet from source port $2$ to destination port $3$
@@ -261,10 +375,34 @@ Intuitively the source port is kept constant, one side of the protocol scans por
 side of the protocol scans ports with step 2.
 
 \subsection{Algorithm III - expected port value}
-AHA!
+Some more effective algorithms can be designed if the random process the network follows is known (and their
+parameters).
+
+\begin{mydef}
+Expected port value algorithm
+\[
+u \in \mathcal{U}, s \in \mathcal{S}, \lambda \in \mathcal{M}:\;
+\mathcal{A}(u, s, \lambda) = (0, s(1 + \lambda T))
+\]
+\end{mydef}
+
+
+
 
 \subsection{Algorithm IV - Poisson sampling}
-Uhmmmmmmm....
+Algorithm with the best success rate in our simulation is based on sampling Poisson distribution.
+The main idea is to let the algorithm simulate the Poisson process that the network of the
+other party follows. 
+
+\begin{mydef}
+Poisson sampling algorithm 
+\begin{align*}
+& u \in \mathcal{U}, s \in \mathcal{S}, \lambda \in \mathcal{M}:\\
+& \mathcal{A}(u, s, \lambda) = (0, \text{Poisson}(\lambda T (1+s C(\lambda)))
+\end{align*} where $\text{Poisson}(\mu) = X \sim Po(\mu)$ samples Poisson distribution with
+parameter $\mu$, function $C(\lambda)$ gives a constant 
+coefficient\footnote{This function was found empirically by maximizing success rate}.
+\end{mydef}
 
 
 % -----
