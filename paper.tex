@@ -161,7 +161,7 @@ it is important to model how NAT's internal state changes over time, i.e. how ma
 were allocated between two time intervals. Thus the workload is important parameter for predicting allocated port.
 
 We model internal network connected to NAT w.r.t. newly created connections (new port allocation) as a 
-time homogenous Poisson process $Po(\lambda)$. By setting $\lambda$ we can model 
+time homogeneous Poisson process $Po(\lambda)$. By setting $\lambda$ we can model 
 different workload of the network and evaluate algorithms with respect to the various parameters e.g., 
 probability of an establishing connection. 
 
@@ -185,7 +185,7 @@ pre-set port forwarding, DMZ, uPnP, etc\dots}.
 
 
  By default a packet 
-comming from the internet (\textit{IP\textsubscript{A},Port\textsubscript{A}}) to the internal 
+coming from the internet (\textit{IP\textsubscript{A},Port\textsubscript{A}}) to the internal 
 network is dropped on the NAT unless there is a valid mapping in NAT allocation table.
 
 \section{Generic algorithm structure}
@@ -196,12 +196,13 @@ NAT.
 
 \begin{mydef}
 Symmetric NAT traversal algorithm is a mapping 
-$\mathcal{A}: \mathcal{U} \times \mathcal{S} \rightarrow \mathcal{P}_{src} \times \mathcal{P}_{dst}$, 
+$\mathcal{A}: \mathcal{U} \times \mathcal{S} \times \mathcal{M} \rightarrow \mathcal{P}_{src} \times \mathcal{P}_{dst}$, 
 where \\
 \begin{compactitem}
 \item $\mathcal{U}=\{0,1\}$ is set of communicating parties
-\item $\mathcal{S} = \{0, 1, \dots, n-1\}, \; n \in \mathbb{N}$
-is a step of the algorithm
+\item $\mathcal{S} = \{0, 1, \dots, n-1\}, \; n \in \mathbb{N}$ is a step of the algorithm
+\item $\mathcal{M}$ contains vectors of parameters of the environment (i.e., network model 
+parameters and additional information obtained in initial phase)
 \item $\mathcal{P}_{src} \subseteq \mathbb{N}$ and $\mathcal{P}_{dst} \subseteq \mathbb{N}$
 are sets of source and destination ports respectively
 \end{compactitem}
@@ -212,7 +213,7 @@ If we have $A(0,1) = (2,3)$ it means party $0$ in step $1$ sent packet from sour
 of the party $1$.
 
 \paragraph{Time.} 
-The algorithm proceeds in discrete time steps. Algorith starts in time $t_0 = 0$~ms and each step $i \in \mathcal{S}$
+The algorithm proceeds in discrete time steps. Algorithm starts in time $t_0 = 0$~ms and each step $i \in \mathcal{S}$
 happens in time $t_i = iT$ for some $T$. If it is not mentioned otherwise, $T = 10$~ms.
 
 \paragraph{Party change.} 
@@ -227,7 +228,7 @@ a \in \mathcal{U},  \neg a = \begin{dcases*}
 \subsection{Algorithm I - baby-step, giant-step}
 We propose the algorithm with high success rate for small network loads, i.e.,
 $\lambda \leq 0.03, T=10$~ms. When error becomes larger,
-algorithm step is not fast enought to compensate errors and thus fails for larger $\lambda$.
+algorithm step is not fast enough to compensate errors and thus fails for larger $\lambda$.
 
 \begin{mydef}
 Baby-step giant-step algorithm
@@ -258,6 +259,12 @@ of the protocol.
 
 Intuitively the source port is kept constant, one side of the protocol scans ports sequentially, another
 side of the protocol scans ports with step 2.
+
+\subsection{Algorithm III - expected port value}
+AHA!
+
+\subsection{Algorithm IV - Poisson sampling}
+Uhmmmmmmm....
 
 
 % -----
