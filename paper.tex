@@ -364,6 +364,7 @@ C_i = \begin{dcases*}
          C_{i-1} + 1 + X_i, \; X_i \sim Po(\lambda T) & otherwise 
         \end{dcases*}
 \]
+Rewritten as $C_i = i + \sum_{j=1}^{i}X_i$. Expected value $E[C_i] = i + E[\sum_{j=1}^{i}X_i] = i (1+\lambda T)$.
 
 \section{Generic algorithm structure}
 Algorithms we propose have a common structure. In order to maximize probability of an establishing
@@ -445,13 +446,14 @@ parameters).
 
 \begin{mydef}
 Expected port value algorithm
-\[
-u \in \mathcal{U}, s \in \mathcal{S}, \lambda \in \mathcal{M}:\;
-\mathcal{A}(u, s, \lambda) = (0, s(1 + \lambda T))
-\]
+\begin{align*}
+& u \in \mathcal{U}, s \in \mathcal{S}, \lambda \in \mathcal{M}:\\
+& \mathcal{A}(u, s, \lambda) = (0, s(1 + \lambda T))
+\end{align*}
 \end{mydef}
 
-ToDo: give an argument that algorithm in each step computes expected value on port number in given time...
+In step $i$ algorithm tries the expected value for $C_i$. Since the $C_i$ has unimodal distribution
+the expected value is also most probable value and the algorithm uses maximum likelihood approach.
 
 \subsection{Algorithm IV - Poisson sampling}
 Algorithm with the best success rate in our simulation is based on sampling Poisson distribution.
@@ -479,6 +481,9 @@ ToDo;
 
 \section{Discussion}
 ToDo; What can be done better, different settings, different $\lambda$ on both sides.
+
+Success rate of the algorithm strongly relies on accurate measurements of the network 
+properties the client resides in.  Usually 
 
 \section{Conclusion}
 ToDo; New algorithm
