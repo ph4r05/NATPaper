@@ -276,7 +276,7 @@ it is not widely deployed and it cannot be relied upon.
 Most of the applications use Interactive Connectivity Establishment~(ICE)~\citep{rfc5245} nowadays, what is a very powerful toolbox for traversing 
 various types of NAT, however does not work with symmetric NATs. ICE mainly uses STUN~\citep{rfc5389} and TURN~\citep{rfc5766} for it's operation.
 
-\section{Related work}
+% \section{Related work}
 Some interesting algorithms for traversing symmetric NAT were proposed by Y. Takeda in \citep{takeda}, but the case both clients are behind symmetric NAT
 with port sensitive allocation function is not covered. It mentions that sending more packets won't increase probability of establishing the new connection.
 Our motivation is to show that it is actually possible.
@@ -365,6 +365,10 @@ C_i = \begin{dcases*}
         \end{dcases*}
 \]
 Rewritten as $C_i = i + \sum_{j=1}^{i}X_i$. Expected value $E[C_i] = i + E[\sum_{j=1}^{i}X_i] = i (1+\lambda T)$.
+
+\paragraph{Port pool exhaustion.} NAT timeout\footnote{Allocation is deleted if no packet is detected in this time interval} is assumed to be 3~minutes, 
+what is common value in practice. This constrains $\lambda$ to the interval $[0, 0.36]$, intuitively from $0$ to $360$ new connections in $1$~s on average. 
+If it is higher the NAT is rendered as unusable since the port pool is exhausted\footnote{$P[X > 65535] = 0.0019, X \sim Po(180000 \cdot 0.36)$} pretty fast.
 
 \section{Generic algorithm structure}
 Algorithms we propose have a common structure. In order to maximize probability of an establishing
@@ -471,6 +475,20 @@ coefficient\footnote{This function was found empirically by maximizing success r
 \end{mydef}
 
 \section{Evaluation}
+
+\paragraph{Algorithm I and II comparison.} 
+Algorithm I has following benefits over II:
+\begin{compactitem}
+ \item works with high success rate for $\lambda \in [0, 0.035] \sim 35$ new connections in 1~s on average.
+ \item can be stopped as soon as connection is established, overhead is proportional to $\lambda$.
+ \item single source port is used, only one listening thread is needed to implement
+it\footnote{NAT is abused to multiplex multiple connections to one source port} compared to the Alg. II.
+This fact makes practical implementation simple and lightweight w.r.t. needed system resources.
+ \item is $\lambda$-invariant. Provided network load is low no additional measurements are needed.
+\end{compactitem}
+
+
+
 ToDo;
 \begin{itemize}
  \item ToDo: algorithm success rate evaluation w.r.t. $\lambda, T$, graphs, graphs, graphs, \dots
