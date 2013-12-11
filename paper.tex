@@ -61,6 +61,10 @@
 \usepackage{amsthm}
 \usepackage{amsmath, mathtools}
 \usepackage{fixltx2e}
+% \usepackage{wrapfig}
+\usepackage{tikz}
+\usepackage{float}
+
 \newtheorem{mydef}{Definition}
 \newcommand{\ignore}[1]{}
 % \setlength{\parskip}{0cm plus4mm minus3mm}
@@ -313,9 +317,9 @@ answering questions like: what is my IP address and port? Change IP address of r
 is used to learn it. In case of incremental NAT it is also needed to determine $\Delta$ and the next port
 that is likely to be allocated for a new connection $\text{PORT}^{\text{A}}_{\text{nat}}$ for A and $\text{PORT}^{\text{B}}_{\text{nat}}$
 for B. The period between determining this information, sending to the other party and starting the algorithm is
-denoted as an \emph{initialization phase} of the NAT traversal algorithm. 
+denoted as an \emph{initialization phase} or a \emph{silent period}\footnote{Since the algorithm itself does nothing} of the NAT traversal algorithm. 
 
-UDP hole punching works as follows:
+UDP hole punching works as follows:\\
 \begin{compactitem}
  \item [1.] $A: \; IP^A_{in}:PORT^A_{in} \longrightarrow IP^B_{nat}:PORT^B_{nat}$ \\
 Locally a~new mapping is created ($PORT^A_{nat}$), packet is dropped on B's~NAT.
@@ -385,12 +389,17 @@ where \\
 \item $\mathcal{S} = \{0, 1, \dots, n-1\}, \; n \in \mathbb{N}$ is a step of the algorithm
 \item $\mathcal{M}$ is set of vectors of parameters of the environment (i.e., network model 
 parameters and additional information obtained in initial phase). 
-In our setting $\mathcal{M} = \{ (\lambda) | \lambda > 0 \}$. For simplicity $\mathcal{M} = \{ \lambda | \lambda > 0 \}$.
+In our setting $\mathcal{M} = \{ (\lambda, t_s) | \lambda~>~0, t\geq~0 \}$. Value $t_s$ is length of the silent period. %For simplicity $\mathcal{M} = \{ \lambda | \lambda > 0 \}$.
 \item $\mathcal{P}_{src} \subseteq \mathbb{N}$ and $\mathcal{P}_{dst} \subseteq \mathbb{N}$
 are sets of source and destination ports respectively
 \end{compactitem}
 \end{mydef}
-If third parameter is not important for the algorithm it can be ignored in notation.
+If the third parameter is not important for the algorithm it can be ignored in the notation. 
+
+Prior algorithm run it is needed to 
+determine NAT state (UDP hole punching), this is assumed to be done by some technique like STUN. For simplicity we assume the port numbers
+starts from $0$. The length of the silent period is also known to the algorithm prior execution in order to estimate the current state of 
+the NAT, e.g., difference between the last measurement and just before algorithm execution.
 
 \paragraph{Intuition.} 
 If we have $A(0,1) = (2,3)$ it means party $0$ in step $1$ sent packet from source port $2$ to destination port $3$
@@ -451,8 +460,8 @@ parameters).
 \begin{mydef}
 Expected port value algorithm
 \begin{align*}
-& u \in \mathcal{U}, s \in \mathcal{S}, \lambda \in \mathcal{M}:\\
-& \mathcal{A}(u, s, \lambda) = (0, s(1 + \lambda T))
+& u \in \mathcal{U}, s \in \mathcal{S}, (\lambda, t_s) \in \mathcal{M}:\\
+& \mathcal{A}(u, s, (\lambda, t_s)) = (0, \lambda t_s + s(1 + \lambda T))
 \end{align*}
 \end{mydef}
 
@@ -467,44 +476,115 @@ other party follows.
 \begin{mydef}
 Poisson sampling algorithm 
 \begin{align*}
-& u \in \mathcal{U}, s \in \mathcal{S}, \lambda \in \mathcal{M}:\\
-& \mathcal{A}(u, s, \lambda) = (0, \text{Poisson}(\lambda T (1+s C(\lambda)))
-\end{align*} where $\text{Poisson}(\mu) = X \sim Po(\mu)$ samples Poisson distribution with
-parameter $\mu$, function $C(\lambda)$ gives a constant 
-coefficient\footnote{This function was found empirically by maximizing success rate}.
+& u \in \mathcal{U}, s \in \mathcal{S}, (\lambda, t_s) \in \mathcal{M}:\\
+& \mathcal{A}(u, s, (\lambda, t_s)) = (0, \lambda t_s + \text{P}(\lambda T (1+s C(\lambda T)))
+\end{align*} where $\text{P}(\mu) = X \sim Po(\mu)$, samples Poisson distribution with
+parameter $\mu$, coefficient function $C(\lambda T)$ gives a constant 
+coefficient\footnote{This function was found empirically by maximizing the success rate}.
+Approximations of the $C(\lambda T)$ by an inverse logarithm and a quartic model:
+\begin{align*}
+C(x) = & ({0.163321 \cdot  ln(64.2568 \cdot x)})^{-1}\\
+C(x) = & (0.172876+1.28162\cdot x-1.41256\cdot x^2 \\
+       & +0.825093\cdot x^3-0.184726\cdot x^4)^{-1}
+\end{align*}
 \end{mydef}
+% 
+\subsection{Silent period in algorithms.} If the length of the silent period is too big
+the algorithm can have problems with coping with a gap that occurred in NAT ports. Thus 
+Algorithms III and IV estimates the starting offset caused by the silent period as an
+expected value from $E[Po(\lambda \cdot t_1)] = \lambda\cdot t_1$.
 
 \section{Evaluation}
 
 \paragraph{Algorithm I and II comparison.} 
 Algorithm I has following benefits over II:
 \begin{compactitem}
- \item works with high success rate for $\lambda \in [0, 0.035] \sim 35$ new connections in 1~s on average.
- \item can be stopped as soon as connection is established, overhead is proportional to $\lambda$.
- \item single source port is used, only one listening thread is needed to implement
+ \item Works with high success rate for $\lambda \in [0, 0.035] \sim 35$ new connections in 1~s on average.
+ \item Can be stopped as soon as connection is established, overhead is proportional to~$\lambda$.
+ \item Single source port is used, only one listening thread is needed to implement
 it\footnote{NAT is abused to multiplex multiple connections to one source port} compared to the Alg. II.
-This fact makes practical implementation simple and lightweight w.r.t. needed system resources.
- \item is $\lambda$-invariant. Provided network load is low no additional measurements are needed.
+Due to this fact a practical implementation is simple and lightweight w.r.t. needed system resources.
+ \item Is $\lambda$-invariant. Provided network load is low no additional measurements are needed.
 \end{compactitem}
 
+\paragraph{Algorithms simulation.}
 
+\begin{figure}[H]
+% \begin{wrapfigure}{r}{0.5\textwidth}
+% \begin{figure*}
+% \begin{center}
+% \leavevmode
+% \centerline
+%{\scalebox{0.40}{\includegraphics[width=\textwidth]{alg_1.pdf}}}
+{\scalebox{0.43}{\includegraphics[trim=50 0 0 0]{alg_1.pdf}}}
+% \end{center}
+\caption{Algorithm evaluation in a simulation, $T=10~ms$. Number of a simulation rounds for one parameter setting is 1000.
+ A, B, C correspond to the Algorithm I, II and III respectively.
+ D, E correspond to the Algorithm IV with optimized $C(\lambda T)$ by an exhaustive search in D case, 
+ in E case $C(\lambda T)$ is approximated by a polynomial.}
+\label{fig:alg_eval}
+\end{figure}
+% \end{figure*}
+% \end{wrapfigure}
+    
+\begin{figure}[H]
+{\scalebox{0.43}{\includegraphics[trim=40 0 0 0]{alg_steps.pdf}}}
+\caption{Steps of the algorithms needed to success on average w.r.t. $\lambda$. Algorithms denoted in a same way as in figure \ref{fig:alg_eval}}
+\label{fig:alg_steps}
+\end{figure}
 
-ToDo;
+In figure \ref{fig:alg_eval} is depicted result of a simulation of 
+the algorithms, for different $\lambda$. Figure \ref{fig:alg_steps} depicts number of steps needed 
+to succeed on average. From figures it is visible Alg. I is more suitable for networks with low 
+workload since has $100\%$ success rate for $\lambda \in [0, 0.035]$. Outside this interval 
+Alg. I is not working and another solution has to be applied. The problem is new connections are
+created faster than algorithm progresses.
+
+Alg. II is set to have fixed $\Delta=900$, in order to maximize the success rate. The disadvantage of this
+algorithm is that it waits on a particular destination port and if it is taken by another connection
+the algorithm fails. 
+
+Alg. IV has high success rate for 
+noisy networks but is very sensitive on a $\lambda$ estimation what decreases practical usability 
+if $\lambda$ changes quickly over time (non-homogeneous Poisson process). Closed form formula for $C(\lambda T)$ 
+optimizing success rate and analytic derivation of the algorithm is still an open question. 
+
 \begin{itemize}
- \item ToDo: algorithm success rate evaluation w.r.t. $\lambda, T$, graphs, graphs, graphs, \dots
- \item ToDo: algorithm pros/cons w.r.t. system requirements, applicability
  \item ToDo: fitting model to the real data from MU network
  \item ToDo: evaluating algorithms on real data from MU network
 \end{itemize}
 
 \section{Discussion}
-ToDo; What can be done better, different settings, different $\lambda$ on both sides.
+For simplicity here we assumed the $\lambda$ is the same on both sides, the new challenges 
+can arise if we allow different parameters on both sides that we haven't studied yet.
+
+Another open question is to find a model that optimizes given task, i.e., establishing a direct
+connection. We proposed a start step, to model the same process that occurs on the network, i.e.,
+Poisson process, but this method requires setting a coefficient function $C(\lambda T)$ for which 
+we don't have exact analytic explanation. This method is also very sensitive to parameter fluctuations
+and thus not very practical for a real world networks. 
+
+In our setting we assume $T=10~ms$ in order to minimize the speed of the evolution of a Poisson process.
+Such short sending interval can cause some packets may get dropped on the path to the destination. But the 
+important is whether they reach the local NAT in order to create a mapping in allocation table. As proposed 
+in \citep{Wang:2006:RSN:1156422.1156550} it is possible to run the algorithm with $T=10~ms$ to create a mapping
+and then re-run the algorithm with higher $T$, e.g., $T=100~ms$ in order to deliver packets to the destination
+using created mapping and holes created in the previous round.
 
 Success rate of the algorithm strongly relies on accurate measurements of the network 
-properties the client resides in.  Usually 
+properties the client resides in. They can be measured prior connection establishment 
+from the point the client connects to the network, as is usually done in ICE and gather 
+more information, build better network model and so on in this way.
+
+Another problematic thing is if this algorithm is followed by a multiple host pairs on
+the same network in the same time. They would artificially increase the network workload
+causing it wouldn't follow Poisson distribution rendering our algorithms as not usable in
+this case.
 
 \section{Conclusion}
-ToDo; New algorithm
+The aim of this work was to study problem of the NAT traversal from statistical point of view,
+and to provide an algorithm with high success rate for networks with low workload. We proposed
+several algorithms solving this problem but there are still some open questions remaining. 
 
 % -----
 % Bibliography
