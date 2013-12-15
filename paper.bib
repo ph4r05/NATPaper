@@ -1,4 +1,7 @@
 
+% disabling URL in bibliography to save space
+% AT preamble{"\def\url#1{}"}
+
 % RFC for TURN
 @misc{rfc5766,
   author="R. Mahy and P. Matthews and J. Rosenberg",
@@ -87,7 +90,8 @@
 
 % Chineese research
 @inproceedings{Wang:2006:RSN:1156422.1156550,
- author = {Wang, Yong and Lu, Zhao and Gu, Junzhong},
+ PREVauthor = {Wang, Yong and Lu, Zhao and Gu, Junzhong},
+ author = {Y. Wang and Z. Lu and J. Gu},
  title = {Research on Symmetric NAT Traversal in P2P Applications},
  booktitle = {Proceedings of the International Multi-Conference on Computing in the Global Information Technology},
  series = {ICCGI '06},
@@ -103,7 +107,7 @@
 
 % Poisson process book
 @book{Nelson:1995:PSP:207382,
- author = {Nelson, Randolph},
+ author = {Nelson, R.},
  title = {Probability, Stochastic Processes, and Queueing Theory: The Mathematics of Computer Performance Modeling},
  year = {1995},
  isbn = {0-384-94452-4},
@@ -153,7 +157,7 @@
 
 http://tools.ietf.org/id/draft-takeda-symmetric-nat-traversal-00.txt
 @misc{takeda,
-  author="Y.Takeda",
+  author="Y. Takeda",
   title="{Symmetric NAT Traversal using STUN}",
   series="Request for Comments",
   howpublished="Internet Draft",
