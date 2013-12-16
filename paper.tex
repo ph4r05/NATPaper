@@ -65,6 +65,7 @@
 \usepackage{tikz}
 \usepackage{float}
 \usepackage{multirow}
+%\usepackage{appendices}
 
 \usepackage{algorithm}% http://ctan.org/pkg/algorithm
 \usepackage{algpseudocode}% http://ctan.org/pkg/algorithmicx
@@ -104,7 +105,15 @@
 \thispagestyle{fancy}
 
 \begin{abstract}
-\noindent ToDo; Will be written as the last part of the paper... Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur magna lorem, tempor sed facilisis vel, porta et turpis. Sed et felis a massa dictum posuere. Aliquam hendrerit rhoncus ipsum sit amet placerat. Duis fringilla est eu arcu mollis faucibus non sit amet eros. Vestibulum risus nibh, dapibus vitae laoreet eget, fringilla quis nisl. Proin consequat nibh sit amet mauris suscipit tincidunt. Sed rutrum, purus nec aliquam faucibus, quam libero venenatis nisi, ut tempor mi sapien vel diam. Pellentesque sagittis elit non risus malesuada accumsan. Morbi consequat urna.
+\noindent Network Address Translators cause troubles for VoIP and other P2P services since central servers are needed for communication.
+A presence of such potentially malicious hosts in a communication path is not desired, mainly due to increased cost, poor link quality 
+and some security consequences.
+Several solution exist for traversing NAT but symmetric case is still problematic. We propose algorithms using single source port for 
+symmetric NAT traversal, each with different properties and applicability. 
+Paper gives a theoretic point of view on the NAT traversal problem by stating problem formally and modeling a network connected to 
+NAT as a random process, in order to evaluate algorithms in a different settings.
+% 
+% ToDo; Will be written as the last part of the paper... Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur magna lorem, tempor sed facilisis vel, porta et turpis. Sed et felis a massa dictum posuere. Aliquam hendrerit rhoncus ipsum sit amet placerat. Duis fringilla est eu arcu mollis faucibus non sit amet eros. Vestibulum risus nibh, dapibus vitae laoreet eget, fringilla quis nisl. Proin consequat nibh sit amet mauris suscipit tincidunt. Sed rutrum, purus nec aliquam faucibus, quam libero venenatis nisi, ut tempor mi sapien vel diam. Pellentesque sagittis elit non risus malesuada accumsan. Morbi consequat urna.
 \end{abstract}
 	
 
@@ -113,20 +122,29 @@
 
 \section{Introduction}
 Network Address Translators (abbreviated as NAT) has been increasing in popularity in recent years 
-mainly due to IPv4 address space depletion, in order to slow it down. On one side NAT offers
-the ability to share a public, globally routable IP address among many internal network hosts but on 
-the other side it often breaks basic end-to-end principle of the Internet and thus favors server-client 
+mainly as a mean of slowing down IPv4 address space depletion. On one hand NAT offers
+the ability to share a public, globally routable IP address among many internal network hosts. On 
+the other hand it breaks basic end-to-end principle of the Internet and thus favors server-client 
 communication model for clients connected behind NAT.
 
-In many applications is peer-to-peer (P2P) connection of crucial importance and the quality of a service depends on 
-it's parameters heavily. Main motivation for this work is Voice-over-IP (VoIP) where direct connection 
+In many applications is a peer-to-peer (P2P) connection of crucial importance and the quality of a service depends on 
+its parameters heavily. Main motivation for this work is Voice-over-IP (VoIP) where direct connection 
 between communicating parties is necessary. If P2P connection is not possible to be established, relay 
 servers has to be used (TURN~\citep{rfc5766} protocol is used). The presence 
 of another node in the communication path can have negative effects on a communication channel quality 
 (increased latency, jitter, lower bandwidth), relay server is a potential point of failure, 
-has to scale with increasing demands of the network, interesting point for attack, etc.
+has to scale with increasing demands of the network, etc...
 Thus relay servers require non-negligible resources what makes them expensive for VoIP providers and
 establishing a direct connection between parties is of high importance.
+
+From an attacker perspective, relay servers are interesting point where to attack thus from security
+standpoint they could be seen as potential enemies trying to sniff and log all 
+communication. NAT (especially symmetric one, used as a carrier-grade border firewall in large networks)
+forces communicating parties to use such central servers
+for communication making monitoring easier for an attacker. Traversal algorithms has to collaborate 
+with central servers in such a way they create a direct link, not using servers any further. 
+% 
+% some way. They use it to create a direct link, not using servers any further. 
 
 In this paper we are focused on a symmetric NAT with a predictable port allocation function. We propose 
 new algorithms for establishing direct connection between hosts behind such NATs that are effective and 
@@ -140,17 +158,20 @@ Some devices with NAT functionality provide special interface enabling traversal
 it is not widely deployed and it cannot be relied upon in a general case. 
 
 Most of the applications use ICE\ignore{~\citep{rfc5245}} nowadays, what is a very powerful toolbox for traversing 
-various types of NAT, however does not work with symmetric NATs. ICE mainly uses STUN~\citep{rfc5389} and TURN\ignore{~\citep{rfc5766}} for it's operation.
+various types of NAT, however does not work with symmetric NATs. ICE mainly uses STUN~\citep{rfc5389} and TURN\ignore{~\citep{rfc5766}} for its operation.
 
 % \section{Related work}
-Some interesting algorithms for traversing symmetric NAT were proposed by Y. Takeda in \citep{takeda}, but the case both clients are behind symmetric NAT
+Some interesting algorithms for traversing symmetric NAT were proposed by Y.~Takeda in \citep{takeda}, but the case both clients are behind symmetric NAT
 with port sensitive allocation function is not covered. It mentions that sending more packets does not increase a probability of establishing a new connection.
 Our motivation is to show that it is actually possible.
 
-RFC 5128 \citep{rfc5128} maps current state of the art in NAT traversal, but does not cover our case. 
+RFC~5128 \citep{rfc5128} maps current state of the art in NAT traversal, but does not cover our case. 
 The research by Wei~\emph{et.~al.} in \citep{wei}., is devoted to symmetric NAT traversal but their algorithm is using another technique compared
 to our approach. The downside of their algorithm is it requires Time To Live~(TTL) modification of the IP~packet. This is usually considered
 as a privileged operation in the operating system and super-user privileges are required for this modification. 
+
+Wang~\emph{et.~al.} \citep{Wang:2006:RSN:1156422.1156550} propose a NAT traversal algorithm for setting we are using based on
+a changing of a source port, while our algorithms keep source port constant.
 
 In our work we study the situation where two parties, A,B tries to establish a direct connection, both of them are behind 
 a symmetric NAT (possibly cascade of such NATs) with port sensitive, predictable allocation function. Another scenarios with
@@ -203,34 +224,35 @@ Packet received on the internal interface has socket pair {(IP\textsubscript{in}
 % 
 % \paragraph{Allocation rule.} ToDo
 
-\subsection{NAT classes}
+\subsection{NAT classes}\label{sec:nat}
 NAT is classified w.r.t. \emph{filtering rule} and \emph{allocation rule} which says what happens after receiving
 packet from an external and an internal network respectively.
 
 Common NAT categorization is according to~\citep{rfc3489}: a) Full Cone
 b) IP Restricted Cone, c) Port Restricted Cone, d) Symmetric.
 
-\paragraph{Full cone NAT.} ~\\
-Allocation table $\mathbb{AT} \subseteq \{ \mathbb{IP}_{in} \times \mathbb{PORT} \} \times \mathbb{PORT}$ holds associations between internal 
-hosts socket and mapped external NAT port. 
-% Rule is created once the connection from the internal host is initiated to an arbitrary external address.
-Filtering rule is:
-\begin{align*}
-& PASS((\text{IP\textsubscript{ex}}, \text{PORT\textsubscript{ex}}, \text{IP\textsubscript{nat}}, \text{PORT\textsubscript{nat}} )) \Leftrightarrow \\
-&  \exists \; \text{IP\textsubscript{in}} \in \mathbb{IP}_{in}, \; \text{PORT\textsubscript{in}} \in \mathbb{PORT}:\\
-& ((\text{IP\textsubscript{in}}, \text{PORT\textsubscript{in}}), \text{PORT\textsubscript{nat}} ) \in \mathbb{AT}
-\end{align*}
- 
-\paragraph{Address restricted cone NAT.} ~\\
-Allocation table $\mathbb{AT} \subseteq \{\mathbb{IP}_{in} \times \mathbb{PORT} \times \mathbb{IP}_{ex}\} \times \mathbb{PORT}$ 
-holds associations between internal hosts socket, external host IP address and mapped external NAT port. 
-% Rule is created once the connection from the internal host is initiated to an arbitrary external address.
-Filtering rule is:
-\begin{align*}
-& PASS((\text{IP\textsubscript{ex}}, \text{PORT\textsubscript{ex}}, \text{IP\textsubscript{nat}}, \text{PORT\textsubscript{nat}} )) \Leftrightarrow \\
-&  \exists \; \text{IP\textsubscript{in}} \in \mathbb{IP}, \; \text{PORT\textsubscript{in}} \in \mathbb{PORT}:\\
-& ((\text{IP\textsubscript{in}}, \text{PORT\textsubscript{in}}, \text{IP\textsubscript{ex}}), \text{PORT\textsubscript{nat}} ) \in \mathbb{AT}
-\end{align*}
+% MOVED TO APPENDIX
+% \paragraph{Full cone NAT.} ~\\
+% Allocation table $\mathbb{AT} \subseteq \{ \mathbb{IP}_{in} \times \mathbb{PORT} \} \times \mathbb{PORT}$ holds associations between internal 
+% hosts socket and mapped external NAT port. 
+% % Rule is created once the connection from the internal host is initiated to an arbitrary external address.
+% Filtering rule is:
+% \begin{align*}
+% & PASS((\text{IP\textsubscript{ex}}, \text{PORT\textsubscript{ex}}, \text{IP\textsubscript{nat}}, \text{PORT\textsubscript{nat}} )) \Leftrightarrow \\
+% &  \exists \; \text{IP\textsubscript{in}} \in \mathbb{IP}_{in}, \; \text{PORT\textsubscript{in}} \in \mathbb{PORT}:\\
+% & ((\text{IP\textsubscript{in}}, \text{PORT\textsubscript{in}}), \text{PORT\textsubscript{nat}} ) \in \mathbb{AT}
+% \end{align*}
+%  
+% \paragraph{Address restricted cone NAT.} ~\\
+% Allocation table $\mathbb{AT} \subseteq \{\mathbb{IP}_{in} \times \mathbb{PORT} \times \mathbb{IP}_{ex}\} \times \mathbb{PORT}$ 
+% holds associations between internal hosts socket, external host IP address and mapped external NAT port. 
+% % Rule is created once the connection from the internal host is initiated to an arbitrary external address.
+% Filtering rule is:
+% \begin{align*}
+% & PASS((\text{IP\textsubscript{ex}}, \text{PORT\textsubscript{ex}}, \text{IP\textsubscript{nat}}, \text{PORT\textsubscript{nat}} )) \Leftrightarrow \\
+% &  \exists \; \text{IP\textsubscript{in}} \in \mathbb{IP}, \; \text{PORT\textsubscript{in}} \in \mathbb{PORT}:\\
+% & ((\text{IP\textsubscript{in}}, \text{PORT\textsubscript{in}}, \text{IP\textsubscript{ex}}), \text{PORT\textsubscript{nat}} ) \in \mathbb{AT}
+% \end{align*}
 
 \paragraph{Port restricted cone NAT.} ~\\
 Allocation table $\mathbb{AT} \subseteq \{\mathbb{IP}_{in} \times \mathbb{PORT} \times \mathbb{IP}_{ex} \times \mathbb{PORT}\} \times \mathbb{PORT}$ 
@@ -246,12 +268,12 @@ Filtering rule is:
 \paragraph{Symmetric NAT.} ~\\
 Allocation table $\mathbb{AT}$ and filtering rule is the same as in Port restricted Cone NAT. The difference lies in the way 
 the new entries in the allocation table are created. For Cone NAT holds that multiple entries in the allocation table 
-can have the same external port assigned, while Symmetric NAT creates new an allocation entries under some circumstances.
+can have the same external port assigned, while Symmetric NAT creates new allocation entries under certain circumstances.
 
 \emph{Allocation function (AF)} defines port allocation rules for new connections (not in $\mathbb{AT}$). Assume $\mathbb{AT}=\emptyset$, for simplicity. 
 AF can be either \emph{predictable} or \emph{random}. In our setting predictable AF is assumed, e.g., \emph{incremental}. 
 If previously allocated port was $\text{PORT\textsubscript{nat}}$
-the next port will be $\text{PORT\textsubscript{nat}}+\Delta$, where $\Delta=1$ usually. Another type of AF is \emph{random}.
+the next port will be $\text{PORT\textsubscript{nat}}+\Delta$, where $\Delta=1$ usually.
 If the chosen port is already taken, AF iterates until the free one is found.
 
 AF can have different \emph{sensitivity} determining the cases where new allocation is created or the previous one is used instead.
@@ -272,34 +294,11 @@ allocations from the same source:
 & \Rightarrow ((\forall s^{\prime} \in \mathbb{SP}, s^{\prime} \neq s , \forall p^{\prime} \in \mathbb{PORT}: \\
 & ((s^{\prime}, p^{\prime}) \in \mathbb{AT})) \Rightarrow p \neq p^{\prime})
 \end{align*}
-
 % 
 %     PASS((\text{IP\textsubscript{out}}, \text{PORT\textsubscript{out}}, \text{IP\textsubscript{ex}}, \text{PORT\textsubscript{ex}} )) \Leftrightarrow \\
 % &  \exists \; \text{IP\textsubscript{in}} \in \mathbb{IP}, \; \text{PORT\textsubscript{in}} \in \mathbb{PORT}:\\
 % & ((\text{IP\textsubscript{in}}, \text{PORT\textsubscript{in}}, \text{IP\textsubscript{out}}, \text{PORT\textsubscript{out}}), \text{PORT\textsubscript{ex}} ) \in \mathbb{AT}
 % \end{align*}
-
-% 
-%We mainly categorize NATs from two perspectives a) 
-% 
-% Hola hop, hola hop, he-ja he-ja hej rup. Hola hop, hola hop, he-ja he-ja hej rup.
-% \begin{compactitem}
-% \item STUN~\citep{rfc5389}
-% \item TURN~\citep{rfc5766}
-% \item Teredo~\citep{rfc4380}
-% \item uPNP~\citep{rfc6970}
-% \item PCP~\citep{rfc6887}
-% \item ICE~\citep{rfc5245}
-% \end{compactitem}
-% 
-
-% Properties of NAT assumed in our work:
-% \begin{compactitem}
-% \item symmetric
-% \item port-restricted firewall
-% \item port-sensitive allocation
-% \item incremental port allocation rule
-% \end{compactitem}
 
 % \section{Related work II}
 % \begin{compactitem}
@@ -309,7 +308,7 @@ allocations from the same source:
 % \end{compactitem}
 
 \section{UDP hole punching with STUN}
-All algorithms here make use of the same principle, \emph{UDP hole punching}. 
+All algorithms in our paper make use of the same principle, \emph{UDP hole punching}. 
 Internet hosts cannot send packet to the internal host directly. 
 Communication has to be initiated from the inside\footnote{Not taking
 pre-set port forwarding, DMZ, uPnP, etc... into consideration. }, what is problematic if two nodes behind 
@@ -317,7 +316,7 @@ NAT wants to communicate.
 
 Assume two parties, A and B with addresses IP\textsuperscript{A} and IP\textsuperscript{B} respectively,
 A and B are behind public NAT with addresses $\text{IP}^{\text{A}}_{\text{nat}}$ and $\text{IP}^{\text{B}}_{\text{nat}}$
-respectively. By default an internal host does not known it's external address and NAT type thus technique like 
+respectively. By default an internal host does not known its external address and NAT type thus technique like 
 STUN\footnote{Core idea: publicly available service running on 2 IP addresses and 2 ports 
 answering questions like: what is my IP address and port? Change IP address of response if I'll get it, etc...} 
 is used to learn it. In case of incremental NAT it is also needed to determine $\Delta$ and the next port
@@ -346,7 +345,7 @@ that is used in queueing theory to model arrivals of requests to the server queu
 
 The core idea of NAT traversal is to predict the next allocated external port by NAT, thus from this perspective 
 it is important to model how NAT's internal state changes over time, i.e., how many external ports 
-were allocated in a given time interval. Thus the workload is important parameter for predicting allocated port.
+were allocated in a given time interval. Thus the workload is important parameter for predicting an allocated port.
 
 We model internal network connected to NAT w.r.t. newly created connections (new port allocation) as a 
 time homogeneous Poisson process $Po(\lambda)$. By setting $\lambda$ we can model 
@@ -366,7 +365,7 @@ Then $P[N(t)=n] = \frac{(\lambda t)^n}{n!} e^{-\lambda t}$
 \end{mydef}
 
 Moreover we assume incremental NAT with $\Delta=1$ on both sides. If we sample the NAT 
-state\footnote{One new STUN request to determine current port number, it creates a new NAT allocation record.}
+state\footnote{STUN request to determine current port number, it creates a new NAT allocation record.}
 each $T=10$~milliseconds the NAT state can be modeled as a random process $\{C_i | C_i \in \mathbb{N}, C_i \geq i, i\geq0\}$ where:
 \[
 C_i = \begin{dcases*}
@@ -378,12 +377,12 @@ Rewritten as $C_i = i + \sum_{j=1}^{i}X_j$. Expected value $E[C_i] = i + E[\sum_
 
 \paragraph{Port pool exhaustion.} NAT timeout\footnote{Allocation is deleted if no packet is detected in this time interval.} is assumed to be 3~minutes, 
 what is common value in practice. This constrains $\lambda$ to the interval $[0, 0.36]$, intuitively from $0$ to $360$ new connections in $1$~s on average. 
-If it is higher the NAT is rendered as unusable since the port pool is exhausted\footnote{$P[X > 65535] = 0.0019, X \sim Po(180000 \cdot 0.36)$.} pretty fast.
+If it is higher the NAT is rendered as unusable since the port pool is exhausted\footnote{$P[X > 65535] = 0.0019, X \sim Po(180000 \cdot 0.36)$.} quickly.
 
 \section{Generic algorithm structure}
 Algorithms we propose have a common structure. In order to maximize probability of an establishing
 a connection (i.e., success rate) it proceeds in discrete \emph{steps}. In each step it 
-tries to open a new hole on it's NAT and/or to predict corresponding port allocated on the destination
+tries to open a new hole on the local NAT and/or to predict corresponding port allocated on the destination
 NAT.
 
 \begin{mydef}
@@ -403,7 +402,7 @@ are sets of source and destination ports respectively.
 If the third parameter is not important for the algorithm it can be ignored in the notation. 
 
 Prior algorithm run it is needed to 
-determine NAT state (UDP hole punching), this is assumed to be done by some technique like STUN. For simplicity we assume the port numbers
+determine NAT state (for UDP hole punching), this is assumed to be done by some technique like STUN. For simplicity we assume the port numbers
 starts from $0$. The length of the silent period is also known to the algorithm prior execution in order to estimate the current state of 
 the NAT, e.g., difference between the last measurement and just before algorithm execution.
 
@@ -412,7 +411,8 @@ Line $A(0,1) = (2,3)$ means party $0$ in step $1$ sent packet from source port $
 of the party $1$.
 
 \paragraph{Time.} 
-The algorithm proceeds in discrete time steps. Algorithm starts in time $t_0 = 0$~ms and each step $i \in \mathcal{S}$
+%The algorithm proceeds in discrete time steps. 
+Algorithm starts in time $t_0 = 0$~ms and each step $i \in \mathcal{S}$
 happens in time $t_i = iT$ for some $T$. If it is not mentioned otherwise, $T = 10$~ms.
 
 %\paragraph{Party change.} 
@@ -588,7 +588,7 @@ Due to this fact a practical implementation is simple and lightweight w.r.t. nee
  \item Is $\lambda$-invariant. Provided network load is low no additional measurements are needed.
 \end{compactitem}
 
-\paragraph{Algorithms simulation.}
+\paragraph{Simulation.}
 
 \begin{figure}[H]
 % \begin{wrapfigure}{r}{0.5\textwidth}
@@ -613,9 +613,8 @@ Due to this fact a practical implementation is simple and lightweight w.r.t. nee
 \caption{Steps of the algorithms needed to success on average w.r.t. $\lambda$. Algorithms denoted in a same way as in figure \ref{fig:alg_eval}.}
 \label{fig:alg_steps}
 \end{figure}
-
-In figure \ref{fig:alg_eval} is depicted result of a simulation of 
-the algorithms, for different $\lambda$. Figure \ref{fig:alg_steps} depicts number of steps needed 
+Figure \ref{fig:alg_eval} depicts algorithms success rate w.r.t. $\lambda$. 
+Figure \ref{fig:alg_steps} depicts number of steps needed 
 to succeed on average. From figures it is visible Alg. I is more suitable for networks with low 
 workload since has $100\%$ success rate for $\lambda \in [0, 0.035]$. Outside this interval 
 Alg. I is not working and another solution has to be applied. The problem is new connections are
@@ -630,13 +629,13 @@ noisy networks but is very sensitive on a $\lambda$ estimation what decreases pr
 if $\lambda$ changes quickly over time (non-homogeneous Poisson process). Closed form formula for $C(\lambda T)$ 
 optimizing success rate and analytic derivation of the algorithm is still an open question. 
 
-\begin{itemize}
- \item ToDo: fitting model to the real data from MU network
- \item ToDo: evaluating algorithms on real data from MU network
-\end{itemize}
+% \begin{itemize}
+%  \item ToDo: fitting model to the real data from MU network
+%  \item ToDo: evaluating algorithms on real data from MU network
+% \end{itemize}
 
 \section{Real data modeling}
-Data collected on university network by NetFlow probes were studied to test the correspondence to the Poisson process
+Data collected in our university network by NetFlow probes were studied to test the correspondence to the Poisson process
 w.r.t. newly created connections/allocations on NAT. NAT was simulated in our program using
 NetFlow data to provide network traffic to the NAT. NetFlow data capture 1 hour of a network communication in two different
 day hours (03 -- low peak, 13 -- high peak).
@@ -679,7 +678,7 @@ be modeled as a time homogeneous Poisson process successfully (hypothesis reject
 The time window the network was monitored in this case is $T \cdot 100 = 1000~ms$. 
 
 If the number of samples is higher, e.g., 500, the time window of studied network traffic is longer and
-in a real world scenario the probability that $\lambda$ is constant in time is low with increasing the time
+in a real world scenario the probability that $\lambda$ is constant in time is low with the increasing length of the time
 window. Due to this time homogeneous model is not strong enough, data is 
 overdispersed what causes failure to fit Poisson distribution (hypothesis rejected in $20.368\%$ of cases). As suggested
 in literature, Negative Binomial model fits better for overdispersed\footnote{The data overdispersion may be caused by dependent events on the network e.g., time-triggered updates downloading, etc...}
@@ -693,11 +692,8 @@ Regarding data from set 03, we can conclude that lower network workload causes m
 thus the Poisson distribution hypothesis is not rejected even in longer time intervals for an estimated $\lambda$. 
 
 
-
-
-
 \section{Discussion}
-For simplicity here we assumed the $\lambda$ is the same on both sides, the new challenges 
+For simplicity, we assumed that $\lambda$ is the same on both sides, the new challenges 
 can arise if we allow different parameters on both sides that we haven't studied yet.
 
 Another open question is to find a model that optimizes given task, i.e., establishing a direct
@@ -738,6 +734,36 @@ We developed an application written in Python that simulates NAT and mentioned a
 statistics for port distributions on NAT and simulates algorithms for different parameters. It
 may be helpful for another researchers interested in this area so we published it in public domain
 hosted on github [URL:WHERE].
+
+To validate our results we implemented Android application using baby-step giant-step algorithm
+to traverse symmetric carrier-grade NAT the mobile phone operator was using. The implementation
+works according to expectations.
+
+\appendix
+\section{NAT classes}\label{sec:classes_appendix}
+Definition of a Full cone NAT and Address restricted cone NAT as given in section \ref{sec:nat}.
+
+\paragraph{Full cone NAT.} ~\\
+Allocation table $\mathbb{AT} \subseteq \{ \mathbb{IP}_{in} \times \mathbb{PORT} \} \times \mathbb{PORT}$ holds associations between internal 
+hosts socket and mapped external NAT port. 
+% Rule is created once the connection from the internal host is initiated to an arbitrary external address.
+Filtering rule is:
+\begin{align*}
+& PASS((\text{IP\textsubscript{ex}}, \text{PORT\textsubscript{ex}}, \text{IP\textsubscript{nat}}, \text{PORT\textsubscript{nat}} )) \Leftrightarrow \\
+&  \exists \; \text{IP\textsubscript{in}} \in \mathbb{IP}_{in}, \; \text{PORT\textsubscript{in}} \in \mathbb{PORT}:\\
+& ((\text{IP\textsubscript{in}}, \text{PORT\textsubscript{in}}), \text{PORT\textsubscript{nat}} ) \in \mathbb{AT}
+\end{align*}
+ 
+\paragraph{Address restricted cone NAT.} ~\\
+Allocation table $\mathbb{AT} \subseteq \{\mathbb{IP}_{in} \times \mathbb{PORT} \times \mathbb{IP}_{ex}\} \times \mathbb{PORT}$ 
+holds associations between internal hosts socket, external host IP address and mapped external NAT port. 
+% Rule is created once the connection from the internal host is initiated to an arbitrary external address.
+Filtering rule is:
+\begin{align*}
+& PASS((\text{IP\textsubscript{ex}}, \text{PORT\textsubscript{ex}}, \text{IP\textsubscript{nat}}, \text{PORT\textsubscript{nat}} )) \Leftrightarrow \\
+&  \exists \; \text{IP\textsubscript{in}} \in \mathbb{IP}, \; \text{PORT\textsubscript{in}} \in \mathbb{PORT}:\\
+& ((\text{IP\textsubscript{in}}, \text{PORT\textsubscript{in}}, \text{IP\textsubscript{ex}}), \text{PORT\textsubscript{nat}} ) \in \mathbb{AT}
+\end{align*}
 
 % -----
 % Bibliography
