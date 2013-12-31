@@ -63,11 +63,12 @@
 % \usepackage{amsthm}
 \usepackage{amsmath, mathtools}
 \usepackage{fixltx2e}
-% \usepackage{wrapfig}
+\usepackage{wrapfig}
 \usepackage{tikz}
 \usepackage{float}
 \usepackage{multirow}
 %\usepackage{appendices}
+\usepackage{subcaption}
 
 \usepackage{algorithm}% http://ctan.org/pkg/algorithm
 \usepackage{algpseudocode}% http://ctan.org/pkg/algorithmicx
@@ -83,22 +84,26 @@
 	\fontsize{24pt}{10pt}\selectfont
 	\textbf{Traversing symmetric NAT with predictable port allocation function}
 	}	
-\author{%
-	\large
-	\textsc{Du\v{s}an Klinec} \\[2mm]%\thanks{Template by \href{http://www.howtotex.com}{howtoTeX.com}} \\[2mm]
-	\normalsize	Faculty of Informatics \\
-	\normalsize	Masaryk University, Brno \\
-	\normalsize	\href{mailto:xklinec@fi.muni.cz}{xklinec@fi.muni.cz}
-	\and
-	\textsc{Vashek Matyáš} \\[2mm]%\thanks{Template by \href{http://www.howtotex.com}{howtoTeX.com}} \\[2mm]
-	\normalsize	Faculty of Informatics \\
-	\normalsize	Masaryk University, Brno \\
-	\normalsize	\href{mailto:matyas@fi.muni.cz}{matyas@fi.muni.cz}
-	\vspace{-5mm}
-	}
-\date{}
+% \author{%
+% 	\large
+% 	\textsc{Du\v{s}an Klinec} \\[2mm]%\thanks{Template by \href{http://www.howtotex.com}{howtoTeX.com}} \\[2mm]
+% 	\normalsize	Faculty of Informatics \\
+% 	\normalsize	Masaryk University, Brno \\
+% 	\normalsize	\href{mailto:xklinec@fi.muni.cz}{xklinec@fi.muni.cz}
+% 	\and
+% 	\textsc{Vashek Matyáš} \\[2mm]%\thanks{Template by \href{http://www.howtotex.com}{howtoTeX.com}} \\[2mm]
+% 	\normalsize	Faculty of Informatics \\
+% 	\normalsize	Masaryk University, Brno \\
+% 	\normalsize	\href{mailto:matyas@fi.muni.cz}{matyas@fi.muni.cz}
+% 	\vspace{-5mm}
+% 	}
+% \date{}
 
-
+\urldef{\mailsa}\path|xklinec@fi.muni.cz|
+\urldef{\mailsb}\path|matyas@fi.muni.cz|
+\author{Du\v{s}an Klinec \and Vashek Matyáš}
+\institute{Faculty of Informatics, Masaryk University, Brno, Czech Republic,\\
+\email{\{xklinec,matyas\}@fi.muni.cz}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
@@ -123,27 +128,26 @@ NAT as a random process, in order to evaluate algorithms in a different settings
 % \lettrine[nindent=0em,lines=3]{L}orem ipsum dolor sit amet. 
 
 \section{Introduction}
-Network Address Translators (abbreviated as NAT) has been increasing in popularity in recent years 
-mainly as a mean of slowing down IPv4 address space depletion. On one hand NAT offers
+Network Address Translators (abbreviated as NATs) has been increasing in popularity in recent years, 
+mainly as a mean of slowing down IPv4 address space depletion. On one hand, NAT offers
 the ability to share a public, globally routable IP address among many internal network hosts. On 
-the other hand it breaks basic end-to-end principle of the Internet and thus favors server-client 
+the other hand, it breaks the basic end-to-end principle of the Internet and thus favors server-client 
 communication model for clients connected behind NAT.
 
 In many applications is a peer-to-peer (P2P) connection of crucial importance and the quality of a service depends on 
 its parameters heavily. Main motivation for this work is Voice-over-IP (VoIP) where direct connection 
-between communicating parties is necessary. If P2P connection is not possible to be established, relay 
+between communicating parties is necessary. If P2P connection is not possible, relay 
 servers has to be used (TURN~\citep{rfc5766} protocol is used). The presence 
 of another node in the communication path can have negative effects on a communication channel quality 
 (increased latency, jitter, lower bandwidth), relay server is a potential point of failure, 
-has to scale with increasing demands of the network, etc...
+has to scale with increasing demands of the network, etc.
 Thus relay servers require non-negligible resources what makes them expensive for VoIP providers and
 establishing a direct connection between parties is of high importance.
 
-From an attacker perspective, relay servers are interesting point where to attack thus from security
-standpoint they could be seen as potential enemies trying to sniff and log all 
+From an attacker perspective, relay servers can be seen as potential enemies trying to sniff and log all 
 communication. NAT (especially symmetric one, used as a carrier-grade border firewall in large networks)
 forces communicating parties to use such central servers
-for communication making monitoring easier for an attacker. Traversal algorithms has to collaborate 
+for communication, making monitoring easier for an attacker. Traversal algorithms has to collaborate 
 with central servers in such a way they create a direct link, not using servers any further. 
 % 
 % some way. They use it to create a direct link, not using servers any further. 
@@ -159,24 +163,24 @@ Interactive Connectivity Establishment~(ICE)~\citep{rfc5245}. %Terredo\ignore{tu
 Some devices with NAT functionality provide special interface enabling traversal, for example NAT Port Mapping Protocol~\citep{rfc6886}. But in general 
 it is not widely deployed and it cannot be relied upon in a general case. 
 
-Most of the applications use ICE\ignore{~\citep{rfc5245}} nowadays, what is a very powerful toolbox for traversing 
-various types of NAT, however does not work with symmetric NATs. ICE mainly uses STUN~\citep{rfc5389} and TURN\ignore{~\citep{rfc5766}} for its operation.
+ICE\ignore{~\citep{rfc5245}} is used as a technique to traverse NAT in most applications nowadays, 
+however does not work with symmetric NATs. ICE mainly uses STUN~\citep{rfc5389} and TURN\ignore{~\citep{rfc5766}} for its operation.
 
 % \section{Related work}
-Some interesting algorithms for traversing symmetric NAT were proposed by Y.~Takeda in \citep{takeda}, but the case both clients are behind symmetric NAT
+Some interesting algorithms for traversing symmetric NAT were proposed by Y.~Takeda in \citep{takeda}, the case where both clients are behind symmetric NAT
 with port sensitive allocation function is not covered. It mentions that sending more packets does not increase a probability of establishing a new connection.
 Our motivation is to show that it is actually possible.
 
 RFC~5128 \citep{rfc5128} maps current state of the art in NAT traversal, but does not cover our case. 
-The research by Wei~\emph{et.~al.} in \citep{wei}., is devoted to symmetric NAT traversal but their algorithm is using another technique compared
+The research by Wei~\emph{et.~al.} in \citep{wei}., is devoted to symmetric NAT traversal, but their algorithm is using another technique compared
 to our approach. The downside of their algorithm is it requires Time To Live~(TTL) modification of the IP~packet. This is usually considered
 as a privileged operation in the operating system and super-user privileges are required for this modification. 
 
-Wang~\emph{et.~al.} \citep{Wang:2006:RSN:1156422.1156550} propose a NAT traversal algorithm for setting we are using based on
-a changing of a source port, while in our approach we want to explore possibilities with constant source port.
+Wang~\emph{et.~al.} \citep{Wang:2006:RSN:1156422.1156550} propose a NAT traversal algorithm for scenario where two hosts are
+behind symmetric NATs, based on a changing of a source port, while in our approach we want to explore possibilities with constant source port.
 
-In our work we study the situation where two parties, A,B tries to establish a direct connection, both of them are behind 
-a symmetric NAT (possibly cascade of such NATs) with port sensitive, predictable allocation function. Another scenarios with
+In our work we study the situation where two parties -- A,B -- try to establish a direct connection, both of them are behind 
+a symmetric NAT (possibly cascade of such NATs) with port sensitive, predictable allocation function. Other scenarios with
 predictable allocation function are quite easy to solve and covered in previous research. 
 
 \section{Network Address Translation}
@@ -186,13 +190,15 @@ The notation used for the rest of the paper follows.
 % Symmetric NAT could be defined as follows.
 
 \begin{mydef}
-\begin{align*}
-\mathbb{SC} = \mathbb{IP} \times \mathbb{PORT}
-\end{align*} is a Socket. $\mathbb{IP}$ is set of all possible IP addresses and $\mathbb{PORT}$ 
+% \begin{align*}
+$\mathbb{SC} = \mathbb{IP} \times \mathbb{PORT}$
+% \end{align*}%
+ is a Socket. $\mathbb{IP}$ is set of all possible IP addresses and $\mathbb{PORT}$ 
 is set of all possible ports, basically $\mathbb{PORT} = \{1,2,\dots,65535\}$.
-\begin{align*}
-\mathbb{SP} = \mathbb{IP} \times \mathbb{PORT} \times \mathbb{IP} \times \mathbb{PORT}
-\end{align*} is a Socket Pair.
+% \begin{align*}
+$\mathbb{SP} = \mathbb{IP} \times \mathbb{PORT} \times \mathbb{IP} \times \mathbb{PORT}$
+% \end{align*}%
+ is a Socket Pair.
 \end{mydef}
 % 
 % \begin{mydef}
@@ -211,7 +217,6 @@ If it is not said otherwise the external NAT address\footnote{We assume NAT has 
 $\text{IP\textsubscript{nat}} \in \mathbb{IP}_{ex}$.
 
 Packet received on the external interface has socket pair {(IP\textsubscript{ex},PORT\textsubscript{ex},IP\textsubscript{nat},PORT\textsubscript{nat})}.
-
 Packet received on the internal interface has socket pair {(IP\textsubscript{in},PORT\textsubscript{in},IP\textsubscript{ex},PORT\textsubscript{ex})}.
 
 % \paragraph{Filtering rule.} Let assume packet with socket pair {(IP\textsubscript{out},PORT\textsubscript{out},IP\textsubscript{ex},PORT\textsubscript{ex})} 
@@ -256,7 +261,7 @@ b) IP Restricted Cone, c) Port Restricted Cone, d) Symmetric.
 % & ((\text{IP\textsubscript{in}}, \text{PORT\textsubscript{in}}, \text{IP\textsubscript{ex}}), \text{PORT\textsubscript{nat}} ) \in \mathbb{AT}
 % \end{align*}
 
-\paragraph{Port restricted cone NAT.} ~\\
+\paragraph{Port restricted cone NAT} ~\\
 Allocation table $\mathbb{AT} \subseteq \{\mathbb{IP}_{in} \times \mathbb{PORT} \times \mathbb{IP}_{ex} \times \mathbb{PORT}\} \times \mathbb{PORT}$ 
 holds associations between internal hosts socket, external host socket and mapped external NAT port. 
 % Rule is created once the connection from the internal host is initiated to an arbitrary external address.
@@ -267,7 +272,7 @@ Filtering rule is:
 & ((\text{IP\textsubscript{in}}, \text{PORT\textsubscript{in}}, \text{IP\textsubscript{ex}}, \text{PORT\textsubscript{ex}}), \text{PORT\textsubscript{nat}} ) \in \mathbb{AT}
 \end{align*}
 
-\paragraph{Symmetric NAT.} ~\\
+\paragraph{Symmetric NAT} ~\\
 Allocation table $\mathbb{AT}$ and filtering rule is the same as in Port restricted Cone NAT. The difference lies in the way 
 the new entries in the allocation table are created. For Cone NAT holds that multiple entries in the allocation table 
 can have the same external port assigned, while Symmetric NAT creates new allocation entries under certain circumstances.
@@ -521,7 +526,7 @@ Expected port value algorithm
 
 In step $i$ algorithm tries the expected value for $C_i$. Since the $C_i$ has unimodal distribution
 the expected value is also most probable value and the algorithm uses maximum likelihood approach.
-
+\newpage
 \subsection{Algorithm IV -- Poisson sampling}
 Algorithm with the best success rate in our simulation is based on sampling Poisson distribution.
 The main idea is to let the algorithm simulate the Poisson process that the network of the
@@ -572,7 +577,7 @@ C(x) = & (0.172876+1.28162\cdot x-1.41256\cdot x^2 \\
 \end{align*}
 \end{mydef}
 % 
-\subsection{Silent period in algorithms.} If the length of the silent period is too big
+\subsection{Silent period in algorithms} If the length of the silent period is too big
 the algorithm can have problems with coping with a gap that occurred in NAT ports. Thus 
 Algorithms III and IV estimates the starting offset caused by the silent period as an
 expected value $E[Po(\lambda \cdot t_1)] = \lambda\cdot t_1$.
@@ -592,29 +597,33 @@ Due to this fact a practical implementation is simple and lightweight w.r.t. nee
 
 \paragraph{Simulation.}
 
-\begin{figure}[H]
 % \begin{wrapfigure}{r}{0.5\textwidth}
-% \begin{figure*}
-% \begin{center}
-% \leavevmode
-% \centerline
-%{\scalebox{0.40}{\includegraphics[width=\textwidth]{alg_1.pdf}}}
-{\scalebox{0.43}{\includegraphics[trim=40 0 0 0]{alg_1.pdf}}}
-% \end{center}
-\caption{Algorithm evaluation in a simulation, $T=10~ms$. Number of a simulation rounds for one parameter setting is 1000.
- A, B, C correspond to the Algorithm I, II and III respectively.
- D, E correspond to the Algorithm IV with optimized $C(\lambda T)$ by an exhaustive search in D case, 
- in E case $C(\lambda T)$ is approximated by a polynomial.}
-\label{fig:alg_eval}
-\end{figure}
-% \end{figure*}
+%  \begin{figure}
+\begin{wrapfigure}{r}{0.5\textwidth}%
+% \wrapfigure{r}{.5\linewidth}{
+     \centering{
+    \begin{subfigure}{0.5\textwidth} 
+	{\scalebox{0.43}{\includegraphics[trim=40 0 0 0]{alg_1.pdf}}}
+	\caption{Algorithm evaluation in a simulation, $T=10~ms$. Number of a simulation rounds for one parameter setting is 1000.
+	A, B, C correspond to the Algorithm I, II and III respectively.
+	D, E correspond to the Algorithm IV with optimized $C(\lambda T)$ by an exhaustive search in D case, 
+	in E case $C(\lambda T)$ is approximated by a polynomial.}
+	\label{fig:alg_eval}
+     \end{subfigure}
+%     \end{figure}
 % \end{wrapfigure}
-    
-\begin{figure}[H]
-{\scalebox{0.43}{\includegraphics[trim=40 0 0 0]{alg_steps.pdf}}}
-\caption{Steps of the algorithms needed to success on average w.r.t. $\lambda$. Algorithms denoted in a same way as in figure \ref{fig:alg_eval}.}
-\label{fig:alg_steps}
-\end{figure}
+% \begin{wrapfigure}{r}{0.5\textwidth}    
+     \begin{subfigure}{0.5\textwidth} %\begin{figure}[H]
+	{\scalebox{0.43}{\includegraphics[trim=40 0 0 0]{alg_steps.pdf}}}
+	\caption{Steps of the algorithms needed to success on average w.r.t. $\lambda$. 
+	Algorithms denoted in a same way as in figure \ref{fig:alg_eval}.}
+	\label{fig:alg_steps}
+     \end{subfigure}}%\end{figure}
+    \vspace{-30pt}
+%  \end{figure}
+\end{wrapfigure}
+
+
 Figure \ref{fig:alg_eval} shows algorithms success rate w.r.t. $\lambda$. 
 Figure \ref{fig:alg_steps} depicts number of steps needed 
 to succeed on average. From figures it is visible Alg. I is more suitable for networks with low 
@@ -636,7 +645,7 @@ optimizing success rate and analytic derivation of the algorithm is still an ope
 %  \item ToDo: evaluating algorithms on real data from MU network
 % \end{itemize}
 
-\section{Real data modeling}
+\subsection{Real data modeling}
 Data collected in our university network by NetFlow probes were studied to test the correspondence to the Poisson process
 w.r.t. newly created connections/allocations on NAT. NAT was simulated in our program using
 NetFlow data to provide network traffic to the NAT. NetFlow data capture 1 hour of a network communication in two different
