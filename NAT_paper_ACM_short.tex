@@ -574,7 +574,7 @@ Due to this fact a practical implementation is simple and lightweight with respe
 
 
 \begin{figure}%[H]
-{\scalebox{0.48}{\includegraphics[trim=40 0 0 0]{alg_1.pdf}}}
+{\scalebox{0.48}{\includegraphics[trim=40 20 0 0]{alg_1.pdf}}}
 \caption{Algorithm evaluation in a simulation, $T=10~ms$. Number of a simulation rounds for one parameter setting is 1000.
  A, B, C correspond to the Algorithm I, II and III respectively.
  D, E correspond to the Algorithm IV with optimized $C(\lambda T)$ by an exhaustive search in D case, 
@@ -583,7 +583,7 @@ Due to this fact a practical implementation is simple and lightweight with respe
 \end{figure}
     
 \begin{figure}%[H]
-{\scalebox{0.48}{\includegraphics[trim=40 0 0 0]{alg_steps.pdf}}}
+{\scalebox{0.48}{\includegraphics[trim=40 20 0 0]{alg_steps.pdf}}}
 \caption{Steps of the algorithms needed to success on average with respect to $\lambda$. Algorithms denoted in a same way as in figure \ref{fig:alg_eval}.}
 \label{fig:alg_steps}
 \end{figure}
@@ -744,9 +744,15 @@ We modeled the network workload as a Poisson process and we verified our approac
 Our testing application was published in public domain. We also validated our results by traversing symmetric 
 carrier-grade NAT of our mobile phone provider.
 
+We believe that by removing unnecessary intermediate nodes from
+the communication path we restrict the attack and failure surfaces and increase the communication reliability.
+Communication paths get less complex, transparency increases and this all support a more natural way of the 
+interconnecting nodes on P2P basis.
+
 \par\smallskip
 \noindent\textbf{Acknowledgement.} 
-This work was supported by the Czech Science Foundation, project GAP202/11/0422. TODO: ACK netflow Vykopall
+This work was supported by the Czech Science Foundation, project GAP202/11/0422. The netflow data was provided
+by the CSIRT team of the Masaryk University, Brno, Czech Republic TODO: FIX.
 
 % \renewcommand{\bibfont}{\small}
 % \bibliographystyle{IEEEtran}
